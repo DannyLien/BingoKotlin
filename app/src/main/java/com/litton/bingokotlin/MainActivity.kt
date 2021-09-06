@@ -59,6 +59,20 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
     override fun onAuthStateChanged(auth: FirebaseAuth) {
         auth.currentUser?.also {
             Log.d(TAG, it.uid)  //it == true
+            FirebaseDatabase.getInstance().getReference("users")
+                .child(it.uid)
+                .addValueEventListener(object : ValueEventListener {
+                    override fun onCancelled(error: DatabaseError) {
+
+                    }
+                    override fun onDataChange(dataSnapshot: DataSnapshot) {
+                        val member = dataSnapshot.getValue(Member::class.java)
+                        member?.nickname?.also  { nick ->
+                            binding.nickname.setText(nick)
+                        } ?: showNicknameDialog(it)
+                    }
+
+                })
             it.displayName.run {
                 FirebaseDatabase.getInstance()
                     .getReference("users")
@@ -69,20 +83,20 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
                         Log.d(TAG, "done")
                     }
             }
-            FirebaseDatabase.getInstance().getReference("users")
-                .child(it.uid)
-                .child("nickname")
-                .addListenerForSingleValueEvent(object : ValueEventListener {
-                    override fun onCancelled(error: DatabaseError) {
-
-                    }
-
-                    override fun onDataChange(dataSnapshot: DataSnapshot) {
-                        dataSnapshot.value?.also { nick ->
-                            Log.d(TAG, "nickname : $nick")    //nick == true
-                        } ?: showNicknameDialog(it)    //nick == false null
-                    }
-                })
+//            FirebaseDatabase.getInstance().getReference("users")
+//                .child(it.uid)
+//                .child("nickname")
+//                .addListenerForSingleValueEvent(object : ValueEventListener {
+//                    override fun onCancelled(error: DatabaseError) {
+//
+//                    }
+//
+//                    override fun onDataChange(dataSnapshot: DataSnapshot) {
+//                        dataSnapshot.value?.also { nick ->
+//                            Log.d(TAG, "nickname : $nick")    //nick == true
+//                        } ?: showNicknameDialog(it)    //nick == false null
+//                    }
+//                })
         } ?: signUp()   //it == false null
     }
 
