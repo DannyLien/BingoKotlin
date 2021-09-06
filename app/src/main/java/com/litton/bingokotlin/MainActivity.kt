@@ -8,10 +8,13 @@ import android.view.MenuItem
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
+import com.litton.bingokotlin.databinding.ActivityMainBinding
 import java.util.*
 import java.util.zip.Inflater
 
 class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
+    private lateinit var binding: ActivityMainBinding
+
     companion object {
         val TAG = MainActivity::class.java.simpleName
         val RC_SIGN_IN = 100
@@ -19,7 +22,9 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+//        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
 
     }
@@ -40,7 +45,7 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when(item.itemId){
+        when (item.itemId) {
             R.id.action_menu_signout -> {
                 FirebaseAuth.getInstance().signOut()
             }
@@ -49,17 +54,25 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
     }
 
     override fun onAuthStateChanged(auth: FirebaseAuth) {
-        if (auth.currentUser == null) {
-            startActivityForResult(
-                AuthUI.getInstance().createSignInIntentBuilder().setAvailableProviders(
-                    Arrays.asList(
-                        AuthUI.IdpConfig.EmailBuilder().build(),
-                        AuthUI.IdpConfig.GoogleBuilder().build()
-                    )
-                ).setIsSmartLockEnabled(false).build(), RC_SIGN_IN)
-        } else {
-            Log.d(TAG, "${auth.currentUser?.uid}")
-        }
+        auth.currentUser?.also {
+            Log.d(TAG, it.uid)
+        } ?: signUp()
+//        if (auth.currentUser == null) {
+//            signUp()
+//        } else {
+//            Log.d(TAG, "${auth.currentUser?.uid}")
+//        }
+    }
+
+    private fun MainActivity.signUp() {
+        startActivityForResult(
+            AuthUI.getInstance().createSignInIntentBuilder().setAvailableProviders(
+                Arrays.asList(
+                    AuthUI.IdpConfig.EmailBuilder().build(),
+                    AuthUI.IdpConfig.GoogleBuilder().build()
+                )
+            ).setIsSmartLockEnabled(false).build(), RC_SIGN_IN
+        )
     }
 
 }
