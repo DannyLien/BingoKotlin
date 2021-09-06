@@ -5,12 +5,17 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.EditText
+import androidx.appcompat.app.AlertDialog
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.litton.bingokotlin.databinding.ActivityMainBinding
 import java.util.*
-import java.util.zip.Inflater
 
 class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
     private lateinit var binding: ActivityMainBinding
@@ -64,7 +69,37 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
                         Log.d(TAG, "done")
                     }
             }
-        } ?: signUp()   //it == null & false
+            FirebaseDatabase.getInstance().getReference("users")
+                .child(it.uid)
+                .child("nickname")
+                .addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onCancelled(error: DatabaseError) {
+
+                    }
+
+                    override fun onDataChange(dataSnapshot: DataSnapshot) {
+                        dataSnapshot.value?.also { nick ->
+                            Log.d(TAG, "nickname : $nick")    //nick == true
+                        } ?: showNicknameDialog(it)    //nick == false null
+                    }
+                })
+        } ?: signUp()   //it == false null
+    }
+
+    private fun showNicknameDialog(user: FirebaseUser) {
+        val editText = EditText(this)
+        editText.setText(user.displayName)
+        AlertDialog.Builder(this)
+            .setTitle("Nickname")
+            .setMessage("Your nickname?")
+            .setView(editText)
+            .setPositiveButton("OK") { dialog, which ->
+                FirebaseDatabase.getInstance().getReference("users")
+                    .child(user.uid)
+                    .child("nickname")
+                    .setValue(editText.text.toString())
+            }
+            .show()
     }
 
     private fun MainActivity.signUp() {
