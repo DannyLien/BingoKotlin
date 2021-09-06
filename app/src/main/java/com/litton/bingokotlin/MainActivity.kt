@@ -3,9 +3,13 @@ package com.litton.bingokotlin
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 import java.util.*
+import java.util.zip.Inflater
 
 class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
     companion object {
@@ -30,6 +34,20 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
         FirebaseAuth.getInstance().removeAuthStateListener(this)
     }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when(item.itemId){
+            R.id.action_menu_signout -> {
+                FirebaseAuth.getInstance().signOut()
+            }
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
     override fun onAuthStateChanged(auth: FirebaseAuth) {
         if (auth.currentUser == null) {
             startActivityForResult(
@@ -38,7 +56,7 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
                         AuthUI.IdpConfig.EmailBuilder().build(),
                         AuthUI.IdpConfig.GoogleBuilder().build()
                     )
-                ).build(), RC_SIGN_IN)
+                ).setIsSmartLockEnabled(false).build(), RC_SIGN_IN)
         } else {
             Log.d(TAG, "${auth.currentUser?.uid}")
         }
