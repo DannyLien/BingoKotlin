@@ -22,10 +22,8 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-//        setContentView(R.layout.activity_main)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
 
     }
 
@@ -55,13 +53,18 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener {
 
     override fun onAuthStateChanged(auth: FirebaseAuth) {
         auth.currentUser?.also {
-            Log.d(TAG, it.uid)
-        } ?: signUp()
-//        if (auth.currentUser == null) {
-//            signUp()
-//        } else {
-//            Log.d(TAG, "${auth.currentUser?.uid}")
-//        }
+            Log.d(TAG, it.uid)  //it == true
+            it.displayName.run {
+                FirebaseDatabase.getInstance()
+                    .getReference("users")
+                    .child(it.uid)
+                    .child("displayName")
+                    .setValue(this)
+                    .addOnCompleteListener {
+                        Log.d(TAG, "done")
+                    }
+            }
+        } ?: signUp()   //it == null & false
     }
 
     private fun MainActivity.signUp() {
