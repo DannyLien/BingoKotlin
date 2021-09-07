@@ -6,9 +6,17 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.firebase.ui.auth.AuthUI
+import com.firebase.ui.database.FirebaseRecyclerAdapter
+import com.firebase.ui.database.FirebaseRecyclerOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.DataSnapshot
@@ -20,6 +28,8 @@ import com.litton.bingokotlin.databinding.ActivityMainBinding
 import java.util.*
 
 class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.OnClickListener {
+    private lateinit var adapter: FirebaseRecyclerAdapter<GameRoom, RoomHolder>
+
     //    lateinit var member: Member
     var member: Member? = null
 
@@ -86,16 +96,46 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
                 .show()
         }
 
+        //RecyclerView for game rooms
+        binding.recycler.setHasFixedSize(true)
+        binding.recycler.layoutManager = LinearLayoutManager(this)
+
+        val query = FirebaseDatabase.getInstance().getReference("rooms")
+            .limitToLast(30)
+        val options = FirebaseRecyclerOptions.Builder<GameRoom>()
+            .setQuery(query, GameRoom::class.java)
+            .build()
+        adapter = object : FirebaseRecyclerAdapter<GameRoom, RoomHolder>(options) {
+            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RoomHolder {
+                val view = layoutInflater.inflate(R.layout.room_row, parent, false)
+                return RoomHolder(view)
+            }
+
+            override fun onBindViewHolder(holder: RoomHolder, position: Int, model: GameRoom) {
+                holder.image.setImageResource(avatarIds[model.init!!.avatarId])
+                holder.title.setText(model.title)
+            }
+        }
+        binding.recycler.adapter = adapter
+
+    }
+
+    class RoomHolder(view: View) : RecyclerView.ViewHolder(view) {
+        var image = view.findViewById<ImageView>(R.id.room_image)
+        var title = view.findViewById<TextView>(R.id.room_title)
+
     }
 
     override fun onStart() {
         super.onStart()
         FirebaseAuth.getInstance().addAuthStateListener(this)
+        adapter.startListening()
     }
 
     override fun onStop() {
         super.onStop()
         FirebaseAuth.getInstance().removeAuthStateListener(this)
+        adapter.stopListening()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
