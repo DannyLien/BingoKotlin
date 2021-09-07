@@ -20,6 +20,9 @@ import com.litton.bingokotlin.databinding.ActivityMainBinding
 import java.util.*
 
 class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.OnClickListener {
+    //    lateinit var member: Member
+    var member: Member? = null
+
     private lateinit var binding: ActivityMainBinding
 
     companion object {
@@ -66,6 +69,23 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
         binding.avatar5.setOnClickListener(this)
         binding.avatar6.setOnClickListener(this)
 
+        binding.fab.setOnClickListener {
+            val roomText = EditText(this)
+            roomText.setText("Welcome")
+            AlertDialog.Builder(this)
+                .setTitle("Game Room")
+                .setMessage("Room title?")
+                .setView(roomText)
+                .setPositiveButton("OK") { dialog, which ->
+                    val room = GameRoom(roomText.text.toString(), member)
+                    FirebaseDatabase.getInstance()
+                        .getReference("rooms")
+                        .push()
+                        .setValue(room)
+                }
+                .show()
+        }
+
     }
 
     override fun onStart() {
@@ -103,7 +123,7 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
                     }
 
                     override fun onDataChange(dataSnapshot: DataSnapshot) {
-                        val member = dataSnapshot.getValue(Member::class.java)
+                        member = dataSnapshot.getValue(Member::class.java)
                         member?.nickname?.also { nick ->
                             binding.nickname.setText(nick)
                         } ?: showNicknameDialog(it)
@@ -171,6 +191,7 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
                 )
             ).setIsSmartLockEnabled(false).build(), RC_SIGN_IN
         )
+
     }
 
     override fun onClick(v: View?) {
