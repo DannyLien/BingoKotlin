@@ -1,5 +1,6 @@
 package com.litton.bingokotlin
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -19,11 +20,9 @@ import com.firebase.ui.database.FirebaseRecyclerAdapter
 import com.firebase.ui.database.FirebaseRecyclerOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.*
 import com.litton.bingokotlin.databinding.ActivityMainBinding
+import java.lang.ref.Reference
 
 import java.util.*
 
@@ -91,8 +90,20 @@ class MainActivity : AppCompatActivity(), FirebaseAuth.AuthStateListener, View.O
                     FirebaseDatabase.getInstance()
                         .getReference("rooms")
                         .push()
-                        .setValue(room)
+                        .setValue(room, object : DatabaseReference.CompletionListener {
+                            override fun onComplete(
+                                error: DatabaseError?,
+                                databaseReference: DatabaseReference
+                            ) {
+                                val roomId = databaseReference.key
+                                val bingo = Intent(this@MainActivity, BingoActivity::class.java)
+                                bingo.putExtra("ROOM_ID", roomId)
+                                bingo.putExtra("IS_CRETAE", true)
+                                startActivity(bingo)
+                            }
+                        })
                 }
+                .setNeutralButton("Cancel", null)
                 .show()
         }
 
